@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提示詞管理面板</title>
+    <style>
+        /* --- 基礎和 RWD 樣式 --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+
+        .container {
+            max-width: 700px; /* 限制最大寬度，保持手機閱讀舒適 */
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        /* --- 提示詞卡片樣式 --- */
+        .prompt-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* 標題欄位樣式 */
+        .card-header {
+            padding: 15px 20px;
+            background-color: #e8f5e9; /* 淺綠色背景 */
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #2e7d32;
+            transition: background-color 0.2s;
+        }
+
+        .card-header:hover {
+            background-color: #c8e6c9;
+        }
+
+        .toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.2s;
+        }
+
+        /* 內容區塊樣式 (預設隱藏) */
+        .card-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out; /* 實現 Collapse 動畫 */
+        }
+        
+        /* 展開時的樣式 */
+        .prompt-card.is-expanded .card-content {
+            max-height: 5000px; /* 設置一個足夠大的值來顯示所有內容 */
+        }
+
+        .prompt-card.is-expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* 內文、按鈕與排版 */
+        .content-body {
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        /* **關鍵** 解決換行問題的 CSS 屬性 */
+        .js-content {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            white-space: pre-wrap; /* <-- 讓換行符生效並自動換行 */
+            word-break: break-word; /* 防止長單詞溢出 */
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .copy-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4caf50; /* 綠色按鈕 */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .copy-button:hover {
+            background-color: #388e3c;
+        }
+
+        .copy-button:active {
+            transform: translateY(1px);
+        }
+
+        /* 複製成功提示 */
+        .copy-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .copy-message.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>我的提示詞庫</h1>
+
+        <div class="prompt-card" id="prompt-1">
+            <div class="card-header ">
+                <span onclick="copyContent('prompt-1')">夜盤分析與日盤預估 (08:00) - 已排版升級</span>
+                <span class="toggle-icon js-toggle">▼</span>
+            </div>
+            <div class="card-content">
+                <div class="content-body">
+                    <div class="js-content">
+請整理今日 (MM/DD) 臺股日盤開盤報告。報告須包含：
+
+1. **夜盤總結：** 臺指期夜盤 (昨日 15:00 至今日 05:00) 總波動範圍及收盤價。
+2. **美股衝擊分析：** 分析前夜美股三大指數、NASDAQ 期貨、TSMC ADR 的漲跌幅及其對今日臺股的影響。
+3. **關鍵消息：** 整理夜間影響市場的國際重大經濟數據或新聞。
+4. **日盤預測：** 預估今日臺股開盤方向與全日主要趨勢，並給出關鍵支撐與壓力點位。
+5. **風險警示：** 強制提示今日是否有潛在的地緣政治或重大財報風險。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="prompt-card" id="prompt-3">
+            <div class="card-header">
+                <span onclick="copyContent('prompt-3')">臺股收盤分析與趨勢判斷 (14:00)</span>
+                <span class="toggle-icon js-toggle">▼</span>
+            </div>
+            <div class="card-content">
+                <div class="content-body">
+                    <div class="js-content">
+請整理今日 (MM/DD) 臺股收盤報告。報告須包含：
+
+1. 臺股加權指數收盤價。
+2. 臺指期近月收盤價。
+3. 分析兩者間的價差原因（正價差/負價差）。
+4. 今日盤中主要驅動因素（漲跌靠電子/傳產）。
+5. 強制分析：盤中是否有急拉/急殺，並解析其背後原因（獲利了結/國際消息/技術壓力）。
+6. 今晚夜盤走勢預估與關鍵支撐，並強制註明今日是否有美股/歐股等國際主要市場假期。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="prompt-card" id="prompt-4">
+            <div class="card-header">
+                <span onclick="copyContent('prompt-4')">臺指期盤中趨勢確認 (16:30) - 已排版升級</span>
+                <span class="toggle-icon js-toggle">▼</span>
+            </div>
+            <div class="card-content">
+                <div class="content-body">
+                    <div class="js-content">
+請整理今日 (MM/DD) 臺指期夜盤趨勢確認報告。報告須包含：
+
+1. **臺指期日盤總結：** 日盤收盤價與夜盤開盤後 16:30 點位。
+2. **國際期貨動態：** 分析歐美主要股指期貨 (如 S&P 500 E-mini) 在亞盤時段的走勢變化。
+3. **早盤資金流向：** 總結今日外資在現貨與期貨的進出數據，判斷是買超/賣超。
+4. **夜盤初步趨勢：** 判斷臺指期夜盤 (15:00-16:30) 初步趨勢是否延續日盤或已出現反轉訊號。
+5. **未來關注點：** 提示今晚美股開盤前還將公佈哪些重要數據，以及其預期影響。
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="prompt-card" id="prompt-5">
+            <div class="card-header">
+                <span onclick="copyContent('prompt-5')">美股開盤前報告 (20:30) - 已排版升級</span>
+                <span class="toggle-icon js-toggle">▼</span>
+            </div>
+            <div class="card-content">
+                <div class="content-body">
+                    <div class="js-content">
+請整理今日 (MM/DD) 美股開盤前報告。報告須包含：
+
+1. **市場情緒：** 總結歐洲股市當日走勢，判斷全球市場的風險偏好。
+2. **美股電子盤：** 確認 NASDAQ 期貨與 S&P 500 期貨的最新點位與趨勢。
+3. **最新消息：** 統整盤前公佈的美國經濟數據 (如初請失業金、房屋銷售等) 或重要企業新聞。
+4. **開盤預期：** 預估美股三大指數開盤方向與當晚可能的波動區間。
+5. **對臺股的影響：** 強制分析美股開盤後，臺指期夜盤可能出現的關鍵變動點，確認「隔日臺股能否漲回來」的基礎。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="copy-message" id="copy-message">已成功複製！</div>
+
+    <script>
+        // --- 點擊標題收合/展開功能 (Collapse) ---
+        document.querySelectorAll('.js-toggle').forEach(header => {
+            header.addEventListener('click', () => {
+                const card = header.closest('.prompt-card');
+                card.classList.toggle('is-expanded');
+            });
+        });
+
+        // --- 複製內容功能 ---
+        function copyContent(cardId) {
+            const card = document.getElementById(cardId);
+            // 找到包含提示詞內容的 js-content 區塊
+            const contentBlock = card.querySelector('.js-content');
+            
+            // 獲取內容 (使用 innerText 可以自動處理換行和多餘空格)
+            const contentToCopy = contentBlock.innerText; 
+
+            // 執行複製
+            navigator.clipboard.writeText(contentToCopy).then(() => {
+                // 顯示成功提示
+                const message = document.getElementById('copy-message');
+                message.innerText= "已成功複製！ \n"+contentToCopy;
+                message.classList.add('show');
+                setTimeout(() => {
+                    message.classList.remove('show');
+                }, 2000); // 2 秒後隱藏
+            }).catch(err => {
+                console.error('複製失敗:', err);
+                alert('複製失敗，請檢查您的瀏覽器權限或手動複製。');
+            });
+        }
+    </script>
+</body>
+</html>
